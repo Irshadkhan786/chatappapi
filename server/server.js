@@ -1,5 +1,7 @@
 var express = require('express');
-var app = express();
+var http = require('http');
+var socket = require('socket.io')
+
 var port = process.env.PORT || '5000';
 var mongoosedb = require('mongoose')
 var bodyparser = require('body-parser');
@@ -8,11 +10,17 @@ var cors = require('cors');
 var mongocon = require('./db/mongoose');
 var {usermodel}= require('./user/user')
 var {authenticateToken,checkDuplicatedata} = require('./db/authinticate');
+const { Socket } = require('net');
+/*== socket server setup ==*/
+var app = express();
+var server = http.createServer(app);
+var io = socket(server);
 
 app.use(express.static(__dirname+'/assets'));
 app.use(bodyparser.urlencoded({extended:true}));
 app.use(bodyparser.json())
-app.use(cors());
+app.use(cors({exposedHeaders:['x-auth']}));
+
 
 app.get("/",(req,res)=>{
     res.send("<h1>Stay Healthy. Stay Home. Stay Safe.</h1>");
@@ -81,9 +89,23 @@ app.post("/login",(req,res)=>{
     })
 })
 
-app.get("/about",authenticateToken,(req,res)=>{
-    console.log(req.user)
+
+app.get("/varifyToken",authenticateToken,(req,res)=>{
+    res.send({status:1,res:'token is valid'});
 })
-app.listen(port,()=>{
+
+/*==== socket code starts here ===*/
+/*== import chat class ==*/
+var {Chat} = require('./db/chat');
+const chat = require('./db/chat');
+io.on('connection',(socket)=>{
+    
+    var chatObj = new Chat();
+    socket.on('setOnlineUser',(data)=>{
+        chatObj.makeUserOnine(data)
+    })
+})
+/*==== socket code ends here ===*/
+server.listen(port,()=>{
 console.log(`Server is runnning on port 5000 `);
 })
