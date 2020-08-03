@@ -23,6 +23,13 @@ var userscheema = mongoose.Schema({
         type:String,
         require:true
     },
+    status:{
+        type:String,
+        require:true
+    },
+    image:{
+        type:String,
+    },
     created_on:{
         type:Date
     },
@@ -95,13 +102,13 @@ userscheema.statics.findByToken = function(token){
     }
     
    
-    return user.findOne({'_id':decode._id,'tokens.token':token,'tokens.access':decode.access});
+    return user.findOne({'_id':decode._id,'tokens.token':token,'tokens.access':decode.access,'status':"1"});
 }
 
 userscheema.statics.findByCredentils = function(formObj){
 
     var user = this;
-    return user.findOne({email:formObj.email}).then((userData)=>{
+    return user.findOne({email:formObj.email,status:"1"}).then((userData)=>{
         if(!userData){
                 return new Promise((resolve,reject)=>{
                     return reject({'status':'0',res:'Email not found'});
